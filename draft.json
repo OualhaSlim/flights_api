@@ -1,0 +1,126 @@
+{
+    "id": "6",
+    "instantTicketingRequired": false,
+    "itineraries": [
+        {
+            "duration": "PT15H40M",
+            "segments": [
+                {
+                    "aircraft": {
+                        "code": "E90"
+                    },
+                    "arrival": {
+                        "at": "2022-05-13T05:05:00",
+                        "iataCode": "MAD",
+                        "terminal": "1"
+                    },
+                    "blacklistedInEU": false,
+                    "carrierCode": "UX",
+                    "departure": {
+                        "at": "2022-05-13T01:50:00",
+                        "iataCode": "TUN",
+                        "terminal": "M"
+                    },
+                    "duration": "PT2H15M",
+                    "id": "90",
+                    "number": "1116",
+                    "numberOfStops": 0
+                },
+                {
+                    "aircraft": {
+                        "code": "73H"
+                    },
+                    "arrival": {
+                        "at": "2022-05-13T18:30:00",
+                        "iataCode": "ORY",
+                        "terminal": "1"
+                    },
+                    "blacklistedInEU": false,
+                    "carrierCode": "UX",
+                    "departure": {
+                        "at": "2022-05-13T16:35:00",
+                        "iataCode": "MAD",
+                        "terminal": "2"
+                    },
+                    "duration": "PT1H55M",
+                    "id": "91",
+                    "number": "1025",
+                    "numberOfStops": 0,
+                    "operating": {
+                        "carrierCode": "UX"
+                    }
+                }
+            ]
+        }
+    ],
+    "lastTicketingDate": "2022-05-12",
+    "nonHomogeneous": false,
+    "numberOfBookableSeats": 9,
+    "oneWay": false,
+    "price": {
+        "additionalServices": [
+            {
+                "amount": "60.00",
+                "type": "CHECKED_BAGS"
+            }
+        ],
+        "base": "124.00",
+        "currency": "EUR",
+        "fees": [
+            {
+                "amount": "0.00",
+                "type": "SUPPLIER"
+            },
+            {
+                "amount": "0.00",
+                "type": "TICKETING"
+            }
+        ],
+        "grandTotal": "148.15",
+        "total": "148.15"
+    },
+    "pricingOptions": {
+        "fareType": [
+            "PUBLISHED"
+        ],
+        "includedCheckedBagsOnly": false
+    },
+    "source": "GDS",
+    "travelerPricings": [
+        {
+            "fareDetailsBySegment": [
+                {
+                    "cabin": "ECONOMY",
+                    "class": "P",
+                    "fareBasis": "PYYO5L",
+                    "includedCheckedBags": {
+                        "quantity": 0
+                    },
+                    "segmentId": "90"
+                },
+                {
+                    "brandedFare": "LITE",
+                    "cabin": "ECONOMY",
+                    "class": "P",
+                    "fareBasis": "PYYO5L",
+                    "includedCheckedBags": {
+                        "quantity": 0
+                    },
+                    "segmentId": "91"
+                }
+            ],
+            "fareOption": "STANDARD",
+            "price": {
+                "base": "124.00",
+                "currency": "EUR",
+                "total": "148.15"
+            },
+            "travelerId": "1",
+            "travelerType": "ADULT"
+        }
+    ],
+    "type": "flight-offer",
+    "validatingAirlineCodes": [
+        "UX"
+    ]
+}
