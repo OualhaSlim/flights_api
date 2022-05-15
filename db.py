@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson.json_util import loads, dumps
 
 client = MongoClient()
 DB = client["flights-api-db"]
@@ -12,7 +13,7 @@ def add_flight_to_db(result, nb_adults, nb_children):
         flight_details = flight["itineraries"][0]
         total_duration = flight_details["duration"]
         # in case direct flight
-        if (len(flight_details["segments"]) == 1):  # ---CAS 1----#  #C pas possible combien de for #id pour plusieurs requetes
+        if len(flight_details["segments"]) == 1:
             departure_details = flight_details["segments"][0]["departure"]
             departure_city_code = departure_details["iataCode"]
             departure_date = departure_details["at"]
@@ -25,7 +26,7 @@ def add_flight_to_db(result, nb_adults, nb_children):
                      "date_depart": departure_date, "date_arrivee": arrival_date, "prix": total_price,
                      "remaining_places": remaining_places, "durée": total_duration}
 
-        elif (len(flight_details["segments"]) > 1):
+        else:
             departure_details = flight_details["segments"][0]["departure"]
             departure_city_code = departure_details["iataCode"]
             departure_date = departure_details["at"]
@@ -53,3 +54,17 @@ def remove_all_data():
     flights_collection = DB["flights"]
     response = flights_collection.delete_many({})
     return response.deleted_count
+
+
+def get_flights_by_dep_and_arr(values):
+    conditions = {'lieu_depart': values['departure'], 'lieu_arrivee': values['arrival']}
+    if 'departureDate' in values:
+        conditions['date_depart'] = {'$regex': values['departureDate']}
+    if 'adults' in values:
+        conditions['nombre_adultes'] = values['adults']
+    if 'children' in values:
+        conditions['nombre_enfant'] = values['children']
+
+    flights_collection = DB["flights"]
+    cursor = flights_collection.find(conditions, {"_id": 0})
+    return dumps(list(cursor))

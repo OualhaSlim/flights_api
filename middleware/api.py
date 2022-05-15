@@ -20,11 +20,11 @@ def api_get_one_flight_details(user_token: str, values):
     return result
 
 
-def api_get_all_fligths(user_token:str, destination, arrival, start_date, end_date, max_adults, max_children):
+def api_get_all_fligths(user_token:str, departure, arrival, start_date, end_date, max_adults, max_children):
     for departure_date in range_date(start_date, end_date):
         for nb_adults in range(1, max_adults+1):
             for nb_children in range(max_children+1):
-                values = {"originLocationCode": destination, "destinationLocationCode": arrival,
+                values = {"originLocationCode": departure, "destinationLocationCode": arrival,
                           "departureDate": departure_date, "adults": nb_adults, "children": nb_children}
                 url = "{}/v2/shopping/flight-offers".format(DATA_URL)
                 headers = {"content-type": "application/json; charset=UTF-8",

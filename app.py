@@ -2,7 +2,7 @@ from flask import Flask, request
 import json
 import itertools
 from middleware.api import api_get_token, api_get_one_flight_details, api_get_all_fligths
-from db import add_flight_to_db, remove_all_data
+from db import add_flight_to_db, remove_all_data, get_flights_by_dep_and_arr
 
 airports_file = open('airports.json')
 airports = json.load(airports_file)
@@ -20,14 +20,8 @@ def get_token():
     return result
 
 
-@app.route('/empty_db', methods=['POST'])
-def remove_all():
-    removed_count = remove_all_data()
-    return "delete success {}".format(removed_count)
-
-
 @app.route('/api/get_flight')
-def get_one_flight_details():
+def get_one_flight_details_api():
     access_token = request.headers['access_token']
     result = api_get_one_flight_details(access_token, request.form)
     if 'data' not in result:
@@ -51,42 +45,33 @@ def update_db():
         for j in range(i+1, len(all_codes)):
             all_codes_combinations.append((all_codes[i], all_codes[j]))
             all_codes_combinations.append((all_codes[j], all_codes[i]))
-    for dest, arr in all_codes_combinations:
-        for nb_adults in range(1, 3):
-            for date in range(16, 24):
-                for nb_children in range(0, 3):
-                    values = {"originLocationCode": dest, "destinationLocationCode": arr,
-                              "departureDate": '2022-05-{}'.format(date),
-                              "adults": nb_adults, "children": nb_children}
-                    result = api_get_one_flight_details(access_token, values)
-                    if 'data' not in result:
-                        if result['errors'][0]['detail'] == "The access token is expired":
-                            return result['errors'][0]['detail'] == "The access token is expired"
-                        print(result['errors'][0]['detail'])
-                        continue
-                    add_flight_to_db(result["data"], nb_adults, nb_children)
-    return "done"
-
-@app.route('/api/update_db')
-def update_db_v2():
-    access_token = request.headers['access_token']
-    all_codes = []
-    for airport_details in airports:
-        all_codes.append(airport_details["code"])
-    all_codes_combinations = []
-    for i in range(len(all_codes)-1):
-        for j in range(i+1, len(all_codes)):
-            all_codes_combinations.append((all_codes[i], all_codes[j]))
-            all_codes_combinations.append((all_codes[j], all_codes[i]))
     start_date = request.form['startDate']
     end_date = request.form['endDate']
     max_adults = int(request.form['maxAdults'])
     max_children = int(request.form['maxChildren'])
-    for dest, arr in all_codes_combinations:
-        for result, nb_adults, nb_children in api_get_all_fligths(access_token, dest, arr,
+    for dep, arr in all_codes_combinations:
+        for result, nb_adults, nb_children in api_get_all_fligths(access_token, dep, arr,
                                                                   start_date, end_date, max_adults, max_children):
+            if 'data' not in result:
+                if result['errors'][0]['detail'] == "The access token is expired":
+                    return result['errors'][0]['detail']
+                print(result['errors'][0]['detail'])
+                continue
             add_flight_to_db(result["data"], nb_adults, nb_children)
     return "done"
+
+
+@app.route('/empty_db', methods=['POST'])
+def remove_all():
+    removed_count = remove_all_data()
+    return "delete success {}".format(removed_count)
+
+
+@app.route('/get_flight')
+def get_one_flight_details():
+    result = get_flights_by_dep_and_arr(request.form)
+    return result
+
 
 @app.errorhandler(404)
 def page_not_found(e):
