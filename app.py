@@ -1,7 +1,7 @@
 from flask import Flask, request
 import json
 import itertools
-from middleware.api import api_get_token, api_get_one_flight_details
+from middleware.api import api_get_token, api_get_one_flight_details, api_get_all_fligths
 from db import add_flight_to_db, remove_all_data
 
 airports_file = open('airports.json')
@@ -11,16 +11,14 @@ app = Flask(__name__)
 # app.config["MONGO_URI"] = "mongodb://localhost:27017/flights-api"
 # mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/flights-api")
 
-@app.route('/')
-def hello_world():
-    return 'This is my first API call!'
 
-@app.route('/get_token', methods=['POST'])
+@app.route('/api/get_token', methods=['POST'])
 def get_token():
     data = request.get_json()
     client_id, client_secret = data['client_id'], data['client_secret']
     result = api_get_token(client_id, client_secret)
     return result
+
 
 @app.route('/empty_db', methods=['POST'])
 def remove_all():
@@ -28,16 +26,21 @@ def remove_all():
     return "delete success {}".format(removed_count)
 
 
-@app.route('/get_flight')
+@app.route('/api/get_flight')
 def get_one_flight_details():
     access_token = request.headers['access_token']
     result = api_get_one_flight_details(access_token, request.form)
     if 'data' not in result:
         return result['errors'][0]['detail']
-    add_flight_to_db(result["data"])
+    nb_adults = int(request.form['adults'])
+    nb_children = 0
+    if 'children' in request.form:
+        nb_children = int(request.form['children'])
+    add_flight_to_db(result["data"], nb_adults, nb_children)
     return result
 
-@app.route('/update_db')
+
+@app.route('/api/update_db')
 def update_db():
     access_token = request.headers['access_token']
     all_codes = []
@@ -49,15 +52,45 @@ def update_db():
             all_codes_combinations.append((all_codes[i], all_codes[j]))
             all_codes_combinations.append((all_codes[j], all_codes[i]))
     for dest, arr in all_codes_combinations:
-        values = {"originLocationCode": dest, "destinationLocationCode": arr, "departureDate": '2022-05-15',
-                  'adults': 1}
-        result = api_get_one_flight_details(access_token, values)
-        if 'data' not in result:
-            continue
-        add_flight_to_db(result["data"])
-
-    print(all_codes_combinations)
+        for nb_adults in range(1, 3):
+            for date in range(16, 24):
+                for nb_children in range(0, 3):
+                    values = {"originLocationCode": dest, "destinationLocationCode": arr,
+                              "departureDate": '2022-05-{}'.format(date),
+                              "adults": nb_adults, "children": nb_children}
+                    result = api_get_one_flight_details(access_token, values)
+                    if 'data' not in result:
+                        if result['errors'][0]['detail'] == "The access token is expired":
+                            return result['errors'][0]['detail'] == "The access token is expired"
+                        print(result['errors'][0]['detail'])
+                        continue
+                    add_flight_to_db(result["data"], nb_adults, nb_children)
     return "done"
+
+@app.route('/api/update_db')
+def update_db_v2():
+    access_token = request.headers['access_token']
+    all_codes = []
+    for airport_details in airports:
+        all_codes.append(airport_details["code"])
+    all_codes_combinations = []
+    for i in range(len(all_codes)-1):
+        for j in range(i+1, len(all_codes)):
+            all_codes_combinations.append((all_codes[i], all_codes[j]))
+            all_codes_combinations.append((all_codes[j], all_codes[i]))
+    start_date = request.form['startDate']
+    end_date = request.form['endDate']
+    max_adults = int(request.form['maxAdults'])
+    max_children = int(request.form['maxChildren'])
+    for dest, arr in all_codes_combinations:
+        for result, nb_adults, nb_children in api_get_all_fligths(access_token, dest, arr,
+                                                                  start_date, end_date, max_adults, max_children):
+            add_flight_to_db(result["data"], nb_adults, nb_children)
+    return "done"
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return "page not found"
 
 
 if __name__ == "__main__":
