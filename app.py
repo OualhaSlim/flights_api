@@ -2,14 +2,12 @@ from flask import Flask, request
 import json
 import itertools
 from middleware.api import api_get_token, api_get_one_flight_details, api_get_all_fligths
-from db import add_flight_to_db, remove_all_data, get_flights_by_dep_and_arr
+from db import add_flight_to_db, remove_all_data, get_flights_by_dep_and_arr, add_airports_to_db, get_all_airports
 
 airports_file = open('airports.json')
 airports = json.load(airports_file)
 
 app = Flask(__name__)
-# app.config["MONGO_URI"] = "mongodb://localhost:27017/flights-api"
-# mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/flights-api")
 
 
 @app.route('/api/get_token', methods=['POST'])
@@ -34,7 +32,7 @@ def get_one_flight_details_api():
     return result
 
 
-@app.route('/api/update_db')
+@app.route('/api/update_db', methods=['POST'])
 def update_db():
     access_token = request.headers['access_token']
     all_codes = []
@@ -61,6 +59,16 @@ def update_db():
     return "done"
 
 
+@app.route('/add_airports', methods=['POST'])
+def add_airports():
+    add_airports_to_db(airports)
+    return "done"
+
+@app.route('/get_all_airports')
+def get_airports():
+    result = get_all_airports()
+    return result
+
 @app.route('/empty_db', methods=['POST'])
 def remove_all():
     removed_count = remove_all_data()
@@ -79,5 +87,5 @@ def page_not_found(e):
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
 

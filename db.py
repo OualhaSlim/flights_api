@@ -5,6 +5,19 @@ client = MongoClient()
 DB = client["flights-api-db"]
 
 
+def add_airports_to_db(airports):
+    airports_collection = DB["airports"]
+    for airport in airports:
+        airports_collection.insert_one(airport)
+    return
+
+
+def get_all_airports():
+    airports_collection = DB["airports"]
+    cursor = airports_collection.find({}, {"_id": 0, "code": 1, "country": 1, "city": 1})
+    return dumps(list(cursor))
+
+
 def add_flight_to_db(result, nb_adults, nb_children):
     flights_collection = DB["flights"]
     for flight in result:
